@@ -1,0 +1,118 @@
+.canvas-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+.canvas-toolbar {
+  background: white;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+  /* Ensure toolbar covers canvas content */
+}
+
+.canvas-toolbar h2 {
+  flex: 1;
+  font-size: 18px;
+  color: #333;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid #e0e0e0;
+}
+
+.zoom-controls button {
+  padding: 6px 12px;
+  min-width: 32px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 0;
+}
+
+.zoom-level {
+  font-size: 13px;
+  color: #666;
+  min-width: 45px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.canvas {
+  flex: 1;
+  position: relative;
+  /* Hide scrollbars for infinite panning */
+  cursor: default;
+  background-color: #fafafa;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+}
+
+.canvas.panning {
+  cursor: grab;
+}
+
+.canvas.panning:active {
+  cursor: grabbing;
+}
+
+.canvas.dragging {
+  cursor: grabbing;
+}
+
+.canvas.drawing-mode {
+  cursor: crosshair;
+}
+
+.connection-hint {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2196f3;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.canvas-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  /* Grid background that moves with transform? No, usually distinct. */
+}
+
+.connection-lines {
+  pointer-events: none;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin-bottom: 20px;
+}

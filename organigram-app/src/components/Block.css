@@ -1,0 +1,223 @@
+.block {
+  position: absolute;
+  min-width: 200px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 16px;
+  cursor: pointer;
+  border: 2px solid #ddd;
+  transition: box-shadow 0.2s;
+}
+
+.block.dragging {
+  cursor: move;
+  opacity: 0.8;
+}
+
+.block:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.block.selected {
+  border-color: #2196f3;
+  box-shadow: 0 4px 16px rgba(33,150,243,0.3);
+}
+
+.block.group {
+  border-left-width: 6px;
+}
+
+.block.target-mode:hover {
+  border-color: #2196f3;
+  box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+  cursor: alias;
+}
+
+.block.target-mode .connection-node {
+  transform: translateX(-50%) scale(1.5);
+  background: white;
+  border-color: #2196f3;
+}
+
+.connection-node {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #2196f3;
+  border: 2px solid white;
+  border-radius: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+.connection-node-top {
+  top: -6px;
+}
+
+.connection-node-bottom {
+  bottom: -6px;
+}
+
+.block:hover .connection-node {
+  background: #1976d2;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.5);
+}
+
+.attach-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #f0f0f0;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.attach-button:hover {
+  background: #2196f3;
+  transform: scale(1.1);
+}
+
+.block-quick-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.quick-action-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: #f0f0f0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.quick-action-btn:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+}
+
+.block-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.block-image-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.block-image {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e0e0e0;
+}
+
+.block-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Priority 1: Group Name - Most prominent */
+.block-group-name {
+  font-weight: 800;
+  font-size: 16px;
+  color: #1976d2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  word-wrap: break-word;
+  border-bottom: 2px solid #2196f3;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+/* Priority 2: Person Name - Second most prominent */
+.block-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.3;
+  word-wrap: break-word;
+}
+
+/* Priority 3: Title - Third priority */
+.block-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+  line-height: 1.3;
+  word-wrap: break-word;
+}
+
+/* Priority 4: Comments - Fourth priority */
+.block-comment {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.4;
+  word-wrap: break-word;
+  padding-top: 4px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.block-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.block-actions button {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.block-children {
+  margin-top: 12px;
+  padding-left: 20px;
+  border-left: 2px solid #e0e0e0;
+}
+
+.block-children.collapsed {
+  display: none;
+}
+
+.fold-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: #666;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.fold-button:hover {
+  background: #f0f0f0;
+}
