@@ -28,33 +28,47 @@ export const Storage = {
     }
   },
 
-  exportToYAML(organigrams) {
+  exportData(organigrams) {
     try {
-      const yaml = jsyaml.dump({ organigrams })
-      const blob = new Blob([yaml], { type: 'text/yaml' })
+      const json = JSON.stringify(organigrams, null, 2)
+      const blob = new Blob([json], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `organigrams_${Date.now()}.yaml`
+      a.download = `organigrams_${Date.now()}.json`
       a.click()
       URL.revokeObjectURL(url)
     } catch (e) {
       console.error('Export error:', e)
-      alert('Failed to export YAML')
+      alert('Failed to export JSON')
     }
   },
 
-  importFromYAML(file, callback) {
+  importData(file, callback) {
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const data = jsyaml.load(e.target.result)
-        callback(data.organigrams || [])
+        let data
+        try {
+            data = JSON.parse(e.target.result)
+        } catch (jsonErr) {
+            // If JSON fails, try YAML
+            data = jsyaml.load(e.target.result)
+        }
+        
+        if (Array.isArray(data)) {
+            callback(data)
+        } else if (data && data.organigrams && Array.isArray(data.organigrams)) {
+            callback(data.organigrams)
+        } else {
+            alert('Invalid file format. Expected an array of organigrams.')
+        }
       } catch (err) {
         console.error('Import error:', err)
-        alert('Failed to import YAML')
+        alert('Failed to import file')
       }
     }
     reader.readAsText(file)
   }
 }
+

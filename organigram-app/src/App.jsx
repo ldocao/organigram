@@ -273,7 +273,7 @@ function App() {
       }
 
       const children = childrenMap.get(blockId) || []
-      
+
       if (children.length === 0) {
         // Leaf node: just the block width
         subtreeWidths.set(blockId, BLOCK_WIDTH)
@@ -306,7 +306,7 @@ function App() {
       // Position the current block centered at centerX
       const blockX = centerX - BLOCK_WIDTH / 2
       const blockY = START_Y + level * VERTICAL_SPACING
-      
+
       newPositions.set(blockId, { x: blockX, y: blockY })
 
       // Position children symmetrically under this block
@@ -328,9 +328,9 @@ function App() {
         children.forEach((childId) => {
           const childSubtreeWidth = subtreeWidths.get(childId) || BLOCK_WIDTH
           const childCenterX = childX + childSubtreeWidth / 2
-          
+
           positionSubtree(childId, childCenterX, level + 1)
-          
+
           childX += childSubtreeWidth + MIN_HORIZONTAL_SPACING
         })
       }
@@ -341,9 +341,9 @@ function App() {
     roots.forEach((root, index) => {
       const rootWidth = subtreeWidths.get(root.id) || BLOCK_WIDTH
       const rootCenterX = currentX + rootWidth / 2
-      
+
       positionSubtree(root.id, rootCenterX, 0)
-      
+
       // Move to next root position
       currentX += rootWidth + MIN_HORIZONTAL_SPACING * 3 // Extra spacing between separate trees
     })
@@ -365,13 +365,13 @@ function App() {
   }
 
   const handleExport = () => {
-    Storage.exportToYAML(organigrams)
+    Storage.exportData(organigrams)
   }
 
   const handleImport = (e) => {
     const file = e.target.files[0]
     if (file) {
-      Storage.importFromYAML(file, (imported) => {
+      Storage.importData(file, (imported) => {
         setOrganigrams(imported)
         if (imported.length > 0) {
           setCurrentOrganigramId(imported[0].id)
