@@ -88,66 +88,80 @@ export const exportToPDF = (organigram) => {
         const w = BLOCK_WIDTH;
         const h = BLOCK_HEIGHT; // Approximate
 
-        // Background
-        doc.setFillColor(255, 255, 255);
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(1);
+        // Background - use block's color or default to white
+        const bgColor = block.color || '#ffffff';
+        // Convert hex to RGB
+        const hexToRgb = (hex) => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 255, g: 255, b: 255 };
+        };
 
-        // Simple rect with rounded corners (rx, ry)
+        const rgb = hexToRgb(bgColor);
+        doc.setFillColor(rgb.r, rgb.g, rgb.b);
+        doc.setDrawColor(221, 221, 221); // #ddd border
+        doc.setLineWidth(2);
+
+        // Rounded rect with border
         doc.roundedRect(x, y, w, h, 8, 8, 'FD');
 
         // Content Layout
-        let currentY = y + 15;
+        let currentY = y + 20;
 
-        // 1. Group Name (Top Left, smaller)
+        // 1. Group Name (Top, uppercase, blue, bold, with underline)
         if (block.groupName) {
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100); // Gray
+            doc.setFontSize(16);
+            doc.setTextColor(25, 118, 210); // #1976d2
             doc.setFont("helvetica", "bold");
-            doc.text(String(block.groupName), x + 10, currentY);
-            currentY += 15;
+            const groupText = String(block.groupName).toUpperCase();
+            doc.text(groupText, x + 16, currentY);
+
+            // Add underline
+            const textWidth = doc.getTextWidth(groupText);
+            doc.setDrawColor(33, 150, 243); // #2196f3
+            doc.setLineWidth(2);
+            doc.line(x + 16, currentY + 2, x + 16 + textWidth, currentY + 2);
+
+            currentY += 20;
         }
 
-        // 2. Image (Circle/Square on the left or top?)
-        // In Block.jsx, image is on the left of text.
-        // Let's allocate space.
-        let textX = x + 15;
+        // 2. Image (if present)
+        let textX = x + 16;
         if (block.image) {
             try {
-                // Draw Image (Avatar style)
-                // x + 10, currentY
-                const imgSize = 40;
-                doc.addImage(block.image, 'JPEG', x + 10, currentY, imgSize, imgSize);
-                textX = x + 10 + imgSize + 10;
-
-                // Adjust text Y to center align with image roughly or start at top of image
+                const imgSize = 64;
+                doc.addImage(block.image, 'JPEG', x + 16, currentY, imgSize, imgSize);
+                textX = x + 16 + imgSize + 10;
             } catch (e) {
                 console.warn('Failed to add image to PDF', e);
             }
         }
 
-        // 3. Name (Bold, Primary)
-        // Adjust Y if image is present
-        const contentStartY = block.image ? currentY + 10 : currentY + 10;
+        // 3. Name (Bold, dark gray #333)
+        const contentStartY = block.image ? currentY + 15 : currentY;
 
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(14);
+        doc.setTextColor(51, 51, 51); // #333
+        doc.setFontSize(15);
         doc.setFont("helvetica", "bold");
         doc.text(String(block.name || 'Unnamed'), textX, contentStartY);
 
-        // 4. Title (Normal, Secondary)
+        // 4. Title (Semi-bold italic, medium gray #666)
         if (block.title) {
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "normal");
-            doc.text(String(block.title), textX, contentStartY + 15);
+            doc.setFontSize(13);
+            doc.setTextColor(102, 102, 102); // #666
+            doc.setFont("helvetica", "italic");
+            doc.text(String(block.title), textX, contentStartY + 18);
         }
 
-        // 5. Comment (Italic, Tertiary)
+        // 5. Comment (Regular, light gray #888) - Note: not shown in UI but included in PDF
         if (block.comment) {
-            doc.setFontSize(10);
-            doc.setTextColor(80, 80, 80);
-            doc.setFont("helvetica", "italic");
-            doc.text(String(block.comment), textX, contentStartY + 30);
+            doc.setFontSize(12);
+            doc.setTextColor(136, 136, 136); // #888
+            doc.setFont("helvetica", "normal");
+            doc.text(String(block.comment), textX, contentStartY + 36);
         }
 
     });
