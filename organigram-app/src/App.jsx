@@ -313,7 +313,7 @@ function App() {
               addBlock(data, editingBlock.parentId, editingBlock.position)
             }
           }}
-          onCancel={() => setEditingBlock(null)}
+          onClose={() => setEditingBlock(null)}
         />
       )}
     </div>

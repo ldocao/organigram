@@ -117,8 +117,12 @@ function Block({ block, onSelect, isSelected, onUpdate, onEdit, onAddChild, onNo
             {/* Priority 3: Title */}
             {block.title && <div className="block-title">{block.title}</div>}
 
-            {/* Priority 4: Comments */}
-            {block.comment && <div className="block-comment">{block.comment}</div>}
+            {/* Priority 4: Comments - Tooltip */}
+            {(block.comment || block.description) && (
+              <div className="block-tooltip">
+                {block.comment || block.description}
+              </div>
+            )}
           </div>
         </div>
 

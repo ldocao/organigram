@@ -7,21 +7,26 @@ function Minimap({ blocks, viewOffset, zoom, viewportSize, onNavigate }) {
 
     // Constants for minimap rendering
     const MINIMAP_SIZE = 150
-    const PADDING = 50 // Padding around content in "world" units
+    const PADDING = 20 // Reduced padding for tighter fit
 
-    // Calculate world bounds
+    // Calculate world bounds based on actual block positions
     const getWorldBounds = () => {
         if (!blocks || blocks.length === 0) return { minX: 0, maxX: 1000, minY: 0, maxY: 600 }
 
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+
         blocks.forEach(b => {
+            // Use actual block dimensions (approximate based on typical block size)
+            const blockWidth = 200
+            const blockHeight = 100
+
             minX = Math.min(minX, b.x)
-            maxX = Math.max(maxX, b.x + 200) // Assuming width ~200
+            maxX = Math.max(maxX, b.x + blockWidth)
             minY = Math.min(minY, b.y)
-            maxY = Math.max(maxY, b.y + 100) // Assuming height ~100
+            maxY = Math.max(maxY, b.y + blockHeight)
         })
 
-        // Add padding
+        // Add minimal padding for visual clarity
         return {
             minX: minX - PADDING,
             maxX: maxX + PADDING,
@@ -34,7 +39,7 @@ function Minimap({ blocks, viewOffset, zoom, viewportSize, onNavigate }) {
     const worldWidth = bounds.maxX - bounds.minX
     const worldHeight = bounds.maxY - bounds.minY
 
-    // Aspect ratio
+    // Calculate scale to fit content in minimap
     const ratio = Math.max(worldWidth, worldHeight) / MINIMAP_SIZE
     const scale = 1 / ratio
 

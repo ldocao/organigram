@@ -3,7 +3,7 @@
   min-width: 200px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 16px;
   cursor: pointer;
   border: 2px solid #ddd;
@@ -16,12 +16,12 @@
 }
 
 .block:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .block.selected {
   border-color: #2196f3;
-  box-shadow: 0 4px 16px rgba(33,150,243,0.3);
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.3);
 }
 
 .block.group {
@@ -50,7 +50,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   cursor: crosshair;
   pointer-events: auto;
 }
@@ -220,4 +220,42 @@
 
 .fold-button:hover {
   background: #f0f0f0;
+}
+
+/* Tooltip styles */
+.block-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: normal;
+  max-width: 300px;
+  word-wrap: break-word;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+  pointer-events: none;
+  z-index: 1000;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.block-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.block:hover .block-tooltip {
+  opacity: 1;
+  visibility: visible;
 }
