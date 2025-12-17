@@ -12,6 +12,7 @@ function App() {
   const [organigrams, setOrganigrams] = useState([])
   const [currentOrganigramId, setCurrentOrganigramId] = useState(null)
   const [selectedBlockIds, setSelectedBlockIds] = useState([])
+  const [selectedConnection, setSelectedConnection] = useState(null)
   const [editingBlock, setEditingBlock] = useState(null)
   const [showNewOrganigramModal, setShowNewOrganigramModal] = useState(false)
 
@@ -98,15 +99,29 @@ function App() {
   }
 
   const handleSelectBlock = (selection) => {
+    setSelectedConnection(null) // Clear connection selection
     if (Array.isArray(selection)) {
       setSelectedBlockIds(selection)
     } else if (selection === null) {
       setSelectedBlockIds([])
     } else {
-      // If we receive a single ID, for now let's just exclusively select it
-      // The Canvas will handle the logic of "shift+click" or "drag select" and pass the appropriate array/id
       setSelectedBlockIds([selection])
     }
+  }
+
+  const handleSelectConnection = (connection) => {
+    setSelectedBlockIds([]) // Clear block selection
+    setSelectedConnection(connection)
+  }
+
+  const deleteConnection = (connection) => {
+    if (!connection) return
+    setOrganigrams(prev => prev.map(o =>
+      o.id === currentOrganigramId
+        ? { ...o, connections: o.connections.filter(c => c.from !== connection.from || c.to !== connection.to) }
+        : o
+    ))
+    setSelectedConnection(null)
   }
 
   const addBlock = (blockData, referenceId = null, position = 'child') => {
@@ -251,6 +266,9 @@ function App() {
         onDeleteBlock={deleteBlock}
         onAddBlock={(parentId, position) => setEditingBlock({ parentId, position })}
         onEditBlock={(block) => setEditingBlock(block)}
+        selectedConnection={selectedConnection}
+        onSelectConnection={handleSelectConnection}
+        onDeleteConnection={deleteConnection}
         onResetLayout={resetLayout}
         onAddConnection={handleAddConnection}
       />

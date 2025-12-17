@@ -6,11 +6,14 @@ import Minimap from './Minimap'
 
 function Canvas({
   organigram,
-  selectedBlockIds = [],
+  selectedBlockIds,
+  selectedConnection,
   onSelectBlock,
+  onSelectConnection,
   onUpdateBlock,
   onUpdateBlocks,
   onDeleteBlock,
+  onDeleteConnection,
   onAddBlock,
   onEditBlock,
   onResetLayout,
@@ -117,6 +120,19 @@ function Canvas({
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Ignore if typing in input/textarea
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return
+
+      // Handle Delete/Backspace
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault() // Prevent browser back navigation
+        if (selectedBlockIds && selectedBlockIds.length > 0 && onDeleteBlock) {
+          onDeleteBlock()
+        } else if (selectedConnection && onDeleteConnection) {
+          onDeleteConnection(selectedConnection)
+        }
+      }
+
       if (e.code === 'Space' && !e.repeat) {
         spacePressed.current = true
         if (canvasRef.current) canvasRef.current.style.cursor = 'grab'
@@ -134,7 +150,7 @@ function Canvas({
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [isPanning])
+  }, [isPanning, selectedBlockIds, selectedConnection, onDeleteBlock, onDeleteConnection])
 
   // Effect for wheel event listener
   useEffect(() => {
@@ -424,6 +440,7 @@ function Canvas({
 
     // Clear selection on background click start?
     onSelectBlock([])
+    if (onSelectConnection) onSelectConnection(null)
   }
 
   const handleNodeDragEnd = (blockId, position) => {
@@ -577,33 +594,87 @@ function Canvas({
               const fromBlock = visibleBlocks.find(b => b.id === conn.from)
               const toBlock = visibleBlocks.find(b => b.id === conn.to)
               if (fromBlock && toBlock) {
-                // Get actual block dimensions or defaults
                 const fromSize = blockSizes[fromBlock.id] || { width: 200, height: 100 }
-                // ...
+                const toMeasure = blockSizes[toBlock.id] || { width: 200, height: 100 }
 
                 // Connection points: Parent (Bottom) -> Child (Top)
-                const fromY = fromBlock.y + fromSize.height
-                const toY = toBlock.y
+                const startX = fromBlock.x + fromSize.width / 2
+                const startY = fromBlock.y + fromSize.height
 
-                // Calculate center X for both blocks
-                const fromX = fromBlock.x + fromSize.width / 2
+                const endX = toBlock.x + toMeasure.width / 2
+                const endY = toBlock.y
 
-                // We need to fetch toSize properly
-                const toMeasure = blockSizes[toBlock.id] || { width: 200, height: 100 }
-                const fixedToX = toBlock.x + toMeasure.width / 2
+                // Bezier Curve Control Points
+                const cp1x = startX
+                const cp1y = startY + 50
+                const cp2x = endX
+                const cp2y = endY - 50
+
+                const pathD = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`
+
+                const isSelected = selectedConnection &&
+                  selectedConnection.from === conn.from &&
+                  selectedConnection.to === conn.to
+
+                // Midpoint calculation for t=0.5 (for placing the delete button)
+                const t = 0.5
+                const midX = (1 - t) * (1 - t) * (1 - t) * startX + 3 * (1 - t) * (1 - t) * t * cp1x + 3 * (1 - t) * t * t * cp2x + t * t * t * endX
+                const midY = (1 - t) * (1 - t) * (1 - t) * startY + 3 * (1 - t) * (1 - t) * t * cp1y + 3 * (1 - t) * t * t * cp2y + t * t * t * endY
 
                 return (
-                  <g key={idx}>
-                    <line
-                      x1={fromX}
-                      y1={fromY}
-                      x2={fixedToX}
-                      y2={toY}
-                      stroke="#2196f3"
-                      strokeWidth="2"
+                  <g
+                    key={`${conn.from}-${conn.to}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      console.log('Connection clicked')
+                      if (onSelectConnection) onSelectConnection({ from: conn.from, to: conn.to })
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()} // Prevent canvas background interaction (deselection)
+                    style={{ cursor: 'pointer', pointerEvents: 'all' }}
+                  >
+                    {/* Hit Area (Thick transparent) */}
+                    <path
+                      d={pathD}
+                      stroke="transparent"
+                      strokeWidth="20"
+                      fill="none"
                     />
-                    <circle cx={fromX} cy={fromY} r="6" fill="#2196f3" stroke="white" strokeWidth="2" />
-                    <circle cx={fixedToX} cy={toY} r="6" fill="#2196f3" stroke="white" strokeWidth="2" />
+                    {/* Visible Line */}
+                    <path
+                      d={pathD}
+                      stroke={isSelected ? "#2196f3" : "#999"} // Blue if selected, Gray otherwise
+                      strokeWidth={isSelected ? "3" : "2"}
+                      fill="none"
+                      style={{ pointerEvents: 'none' }}
+                    />
+                    {/* Highlight Dots if selected */}
+                    {isSelected && (
+                      <>
+                        <circle cx={startX} cy={startY} r="4" fill="#2196f3" />
+                        <circle cx={endX} cy={endY} r="4" fill="#2196f3" />
+
+                        {/* Trash Button */}
+                        <g
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (onDeleteConnection) onDeleteConnection({ from: conn.from, to: conn.to })
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()} // Vital: Stop canvas from catching this
+                          style={{ cursor: 'pointer', pointerEvents: 'all' }}
+                        >
+                          {/* Background Circle */}
+                          <circle cx={midX} cy={midY} r="12" fill="white" stroke="#dc3545" strokeWidth="1" />
+
+                          {/* Trash Icon (SVG Path) */}
+                          <g transform={`translate(${midX - 6}, ${midY - 6}) scale(0.5)`}>
+                            <path
+                              d="M3 6v18h18v-18h-18zm5 14c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm5 0c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm5 0c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm4-18v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.316c0 .901.73 2 1.631 2h5.711z"
+                              fill="#dc3545"
+                            />
+                          </g>
+                        </g>
+                      </>
+                    )}
                   </g>
                 )
               }
