@@ -1,113 +1,182 @@
-# Organigram Generator
+# Organigram App
 
-A modern, user-friendly web application for creating and managing organizational charts.
+A powerful and intuitive organizational chart creator built with React and Vite. Create, edit, and visualize hierarchical structures with drag-and-drop functionality, collapsible nodes, and export capabilities.
 
 ## Features
 
-✨ **Block Types**
-- Person blocks: Individual employees/members
-- Group blocks: Teams or departments with hierarchy support
+- 🎯 **Interactive Canvas**: Drag-and-drop blocks, pan, and zoom
+- 🔗 **Connection Management**: Create visual connections between blocks
+- 📊 **Hierarchical Layout**: Automatic tree layout with the "Reset Layout" button
+- 📁 **Multiple Organigrams**: Manage multiple organizational charts
+- 💾 **Import/Export**: Save and load organigrams as YAML files
+- 📄 **PDF Export**: Export your organigrams as PDF documents
+- 🎨 **Customizable Blocks**: Add names, titles, groups, images, and comments
+- 🔄 **Collapsible Nodes**: Hide/show subtrees for better visualization
+- ⌨️ **Keyboard Shortcuts**: Delete blocks with Delete/Backspace, pan with Space+drag
 
-📝 **Block Customization**
-- Add names and profile pictures
-- Add comments/descriptions
-- Choose from 8 color themes
-- Drag and drop to reposition blocks
+## Prerequisites
 
-🌲 **Hierarchical Structure**
-- Create nested blocks within groups
-- Fold/unfold groups to manage complexity
-- Visual hierarchy with proper indentation
+- **Node.js** (version 18 or higher recommended)
+- **npm** or **yarn** package manager
 
-💾 **Data Management**
-- Multiple organigrams support
-- Auto-save to browser localStorage
-- Export to YAML format
-- Import from YAML files
+## Installation
 
-🎨 **User Experience**
-- Clean, modern interface
-- Drag-and-drop positioning
-- "Reset Layout" button for auto-alignment
-- Responsive design
+1. Clone or download the repository
+2. Navigate to the project directory:
+   ```bash
+   cd organigram-app
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
 
 ## How to Use
 
-### Getting Started
+This application requires both a **frontend development server** and a **backend server** to run.
 
-1. Open `index.html` in your web browser (Chrome, Firefox, Safari, or Edge)
-2. Click "**+ New Organigram**" to create your first organizational chart
-3. Give it a name and click "Create"
+### Start the Backend Server
 
-### Creating Blocks
+In your first terminal window:
 
-1. Click "**+ Add Block**" in the toolbar
-2. Choose the type (Person or Group)
-3. Enter the name
-4. Optionally add:
-   - A profile picture
-   - A comment/description
-   - A custom color
-5. Click "Create"
+```bash
+npm run server
+```
 
-### Building Hierarchy
+The backend server will start on `http://localhost:3001`
 
-1. For **Group blocks**, you can add child blocks:
-   - Click "**+ Add Child**" button on any group block
-   - This creates a nested block within that group
-2. Use "**▼ Fold**" / "**▶ Unfold**" to collapse/expand groups
+### Start the Frontend Development Server
 
-### Moving Blocks
+In a second terminal window:
 
-- **Drag and drop** any block to reposition it
-- Click "**Reset Layout**" to automatically align all blocks in a grid
+```bash
+npm run dev
+```
 
-### Editing Blocks
+The frontend will start on `http://localhost:5173`
 
-1. Click on a block to select it
-2. Click "**Edit**" in the toolbar
-3. Modify any properties
-4. Click "Save"
+### Access the Application
 
-### Managing Organigrams
+Open your browser and navigate to:
+```
+http://localhost:5173
+```
 
-- **Switch between organigrams**: Click on any organigram in the left sidebar
-- **Delete organigram**: Click the "Delete" button on the organigram card
-- **Export all data**: Click "Export" to download a YAML file
-- **Import data**: Click "Import" and select a previously exported YAML file
+## Usage Guide
 
-## Storage
+### Creating an Organigram
 
-- All data is automatically saved to your browser's localStorage
-- Data persists between sessions
-- Export to YAML for backup or sharing
-- Import YAML files to restore or transfer data
+1. Click "+ New Organigram" in the sidebar
+2. Enter a name for your organigram
+3. Click "Create"
+
+### Adding Blocks
+
+- Click "+ Add Block" in the toolbar
+- Or select a block and use the action buttons:
+  - ⬆️ Add block above (parent)
+  - ⬇️ Add block below (child)
+  - ✏️ Edit block
+
+### Creating Connections
+
+- Drag from the connection node (blue dot) on one block to another block
+- Connections automatically establish parent-child relationships
+
+### Organizing Layout
+
+- Click "Reset Layout" to automatically arrange all blocks in a hierarchical tree structure
+- All blocks will be expanded and positioned symmetrically
+- Each generation is aligned horizontally with proper spacing
+
+### Canvas Navigation
+
+- **Pan**: Hold Space and drag, or use middle mouse button
+- **Zoom**: Ctrl/Cmd + scroll wheel
+- **Select Multiple**: Click and drag on empty canvas to create selection box
+- **Move Blocks**: Click and drag blocks (works with multiple selection)
+
+### Collapsing Nodes
+
+- Select a block with children
+- Click the fold button (▼/▶️) to collapse/expand the subtree
+
+### Keyboard Shortcuts
+
+- `Delete` or `Backspace`: Delete selected blocks or connections
+- `Space + Drag`: Pan the canvas
+
+### Import/Export
+
+- **Export**: Click "Export" to download all organigrams as a YAML file
+- **Import**: Click "Import" to load organigrams from a YAML file
+- **PDF Export**: Click "Export PDF" to save the current organigram as a PDF
+
+## Project Structure
+
+```
+organigram-app/
+├── src/
+│   ├── components/       # React components
+│   │   ├── Block.jsx     # Individual block component
+│   │   ├── Canvas.jsx    # Main canvas with drag/zoom
+│   │   ├── Sidebar.jsx   # Organigram list sidebar
+│   │   └── ...
+│   ├── utils/           # Utility functions
+│   │   ├── storage.js   # LocalStorage & YAML handling
+│   │   ├── pdfExporter.js
+│   │   └── constants.js
+│   ├── App.jsx          # Main app component
+│   └── main.jsx         # Entry point
+├── server/              # Backend server
+│   └── index.js         # Express server for API
+├── package.json         # Dependencies and scripts
+└── README.md           # This file
+```
+
+## Available Scripts
+
+- `npm run dev` - Start the Vite development server (frontend)
+- `npm run server` - Start the Express backend server
+- `npm run build` - Build the app for production
+- `npm run preview` - Preview the production build
+- `npm run lint` - Run ESLint
+
+## Technologies Used
+
+- **React 19** - UI framework
+- **Vite** - Build tool and dev server
+- **Express** - Backend server
+- **jsPDF** - PDF generation
+- **js-yaml** - YAML parsing and generation
+- **LocalStorage** - Client-side data persistence
 
 ## Browser Compatibility
 
-Works on all modern browsers:
-- Chrome/Edge (recommended)
-- Firefox
-- Safari
+Modern browsers with ES6+ support:
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (latest)
 
-## No Installation Required
+## Troubleshooting
 
-This is a standalone web application that runs entirely in your browser. No server, no installation, no dependencies to manage.
+### Port Already in Use
 
-## Tips
+If port 5173 or 3001 is already in use:
+- Frontend: Vite will automatically try the next available port
+- Backend: Edit `server/index.js` and change the port number
 
-- Use **Group blocks** for departments, teams, or organizational units
-- Use **Person blocks** for individual employees
-- **Colors** help distinguish different departments or levels
-- **Comments** are great for roles, responsibilities, or contact info
-- **Export regularly** to backup your work
-- The **Reset Layout** button helps when blocks become messy
+### Backend Connection Issues
 
-## Keyboard Shortcuts
+Ensure both servers are running:
+```bash
+# Terminal 1
+npm run server
 
-- Click outside blocks to deselect
-- ESC key closes modals
+# Terminal 2
+npm run dev
+```
 
-## Privacy
+## License
 
-All data stays on your computer in your browser's localStorage. Nothing is sent to any server.
+This project is private and proprietary.
