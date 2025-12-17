@@ -48,13 +48,39 @@ function App() {
     setShowNewOrganigramModal(false)
   }
 
-  const addConnection = (fromId, toId, fromPos = 'bottom', toPos = 'top') => {
-    setOrganigrams(organigrams.map(o =>
-      o.id === currentOrganigramId
-        ? {
-          ...o,
-          connections: [...(o.connections || []), { from: fromId, to: toId, fromPos, toPos }]
+  const handleAddConnection = (fromId, toId, fromPos, toPos) => {
+    // Normalize direction: Always Parent (from) -> Child (to)
+    // Parent emits from 'bottom', Child receives at 'top'.
+
+    let parentId = fromId
+    let childId = toId
+
+    // If user dragged from Top (Child) to Bottom (Parent), swap.
+    if (fromPos === 'top' && toPos === 'bottom') {
+      parentId = toId
+      childId = fromId
+    } else if (fromPos === fromPos) {
+      // If ambiguous (Top->Top or Bottom->Bottom), use Y coordinate to determine hierarchy
+      const blockA = organigrams.find(o => o.id === currentOrganigramId)?.blocks.find(b => b.id === fromId)
+      const blockB = organigrams.find(o => o.id === currentOrganigramId)?.blocks.find(b => b.id === toId)
+      if (blockA && blockB) {
+        if (blockA.y > blockB.y) {
+          // A is below B. B is Parent.
+          parentId = toId
+          childId = fromId
         }
+      }
+    }
+
+    // Check existing
+    const exists = organigrams.find(o => o.id === currentOrganigramId).connections.some(
+      c => c.from === parentId && c.to === childId
+    )
+    if (exists) return
+
+    setOrganigrams(prev => prev.map(o =>
+      o.id === currentOrganigramId
+        ? { ...o, connections: [...o.connections, { from: parentId, to: childId }] }
         : o
     ))
   }
@@ -94,7 +120,7 @@ function App() {
         if (position === 'parent') {
           // Place new block above reference
           updatedBlock.x = referenceBlock.x
-          updatedBlock.y = Math.max(0, referenceBlock.y - 150) // 150px gap approx
+          updatedBlock.y = referenceBlock.y - 150 // 150px gap approx
         } else {
           // Place new block below reference
           updatedBlock.x = referenceBlock.x
@@ -216,10 +242,10 @@ function App() {
         onUpdateBlock={updateBlock}
         onUpdateBlocks={updateBlocks}
         onDeleteBlock={deleteBlock}
-        onAddBlock={(parentId) => setEditingBlock({ parentId })}
+        onAddBlock={(parentId, position) => setEditingBlock({ parentId, position })}
         onEditBlock={(block) => setEditingBlock(block)}
         onResetLayout={resetLayout}
-        onAddConnection={addConnection}
+        onAddConnection={handleAddConnection}
       />
 
       {showNewOrganigramModal && (
@@ -254,7 +280,7 @@ function App() {
 
       {editingBlock !== null && (
         <BlockEditor
-          block={editingBlock.id ? editingBlock : null}
+          block={editingBlock}
           onSave={(data) => {
             if (editingBlock.id) {
               updateBlock(editingBlock.id, data)
@@ -262,7 +288,7 @@ function App() {
               addBlock(data, editingBlock.parentId, editingBlock.position)
             }
           }}
-          onClose={() => setEditingBlock(null)}
+          onCancel={() => setEditingBlock(null)}
         />
       )}
     </div>

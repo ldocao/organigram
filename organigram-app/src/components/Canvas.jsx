@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import { GRID_SIZE } from '../utils/constants'
 import Block from './Block'
 import './Canvas.css'
@@ -39,7 +39,61 @@ function Canvas({
   const [selectionBox, setSelectionBox] = useState(null)
   const selectionBoxRef = useRef(null) // Mirror state for event access
 
-  const connections = organigram?.connections || []
+  const connections = useMemo(() => organigram?.connections || [], [organigram])
+
+  // Calculate visibility and hierarchy
+  const { visibleBlocks, visibleConnections, hasChildrenMap } = useMemo(() => {
+    if (!organigram) return { visibleBlocks: [], visibleConnections: [], hasChildrenMap: {} }
+
+    const childrenMap = {} // parentId -> [childId]
+    const parentMap = {} // childId -> parentId (assuming single parent for hierarchy, but connections allow many-to-many. For folding, we usually follow 'from' as parent)
+
+    connections.forEach(conn => {
+      if (!childrenMap[conn.from]) childrenMap[conn.from] = []
+      childrenMap[conn.from].push(conn.to)
+
+      parentMap[conn.to] = conn.from // What if multiple parents? Last one wins. Acceptable for simple tree folding.
+    })
+
+    const hasChildrenMap = {}
+    organigram.blocks.forEach(b => {
+      hasChildrenMap[b.id] = childrenMap[b.id] && childrenMap[b.id].length > 0
+    })
+
+    const hiddenBlockIds = new Set()
+
+    // Find all collapsed blocks and mark their descendants as hidden
+    // We need to traverse. 
+    // Optimization: processing order doesn't matter if we just recursively hide children of collapsed nodes.
+
+    // Helper to hide all descendants of a node
+    const hideDescendants = (parentId, visited = new Set()) => {
+      if (visited.has(parentId)) return // Cycle protection
+      visited.add(parentId)
+
+      const children = childrenMap[parentId] || []
+      children.forEach(childId => {
+        hiddenBlockIds.add(childId)
+        hideDescendants(childId, visited)
+      })
+    }
+
+    organigram.blocks.forEach(block => {
+      if (block.collapsed) {
+        console.log('Found collapsed block:', block.id)
+        hideDescendants(block.id)
+      }
+    })
+
+    console.log('Hidden blocks:', Array.from(hiddenBlockIds))
+
+    const visibleBlocks = organigram.blocks.filter(b => !hiddenBlockIds.has(b.id))
+    const visibleConnections = connections.filter(c =>
+      !hiddenBlockIds.has(c.from) && !hiddenBlockIds.has(c.to)
+    )
+
+    return { visibleBlocks, visibleConnections, hasChildrenMap }
+  }, [organigram, connections])
 
   useEffect(() => {
     const handleResize = () => {
@@ -81,6 +135,20 @@ function Canvas({
       window.removeEventListener('keyup', handleKeyUp)
     }
   }, [isPanning])
+
+  // Effect for wheel event listener
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (canvas) {
+      canvas.addEventListener('wheel', handleWheel, { passive: false })
+    }
+
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('wheel', handleWheel)
+      }
+    }
+  }, [zoom, viewOffset])
 
   // Helper to convert screen coordinates to canvas coordinates
   const screenToCanvas = (screenX, screenY) => {
@@ -130,7 +198,7 @@ function Canvas({
         // Finalize selection using Ref
         const currentBox = selectionBoxRef.current
         const selectedIds = []
-        organigram.blocks.forEach(block => {
+        visibleBlocks.forEach(block => {
           const size = blockSizes[block.id] || { width: 200, height: 100 } // approx
           const blockRight = block.x + size.width
           const blockBottom = block.y + size.height
@@ -170,7 +238,7 @@ function Canvas({
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDraggingConnection, isDraggingBlock, draggingBlockIds, isSelecting, selectionStart, isPanning, panStart, zoom, viewOffset, organigram]) // dependencies need to be correct
+  }, [isDraggingConnection, isDraggingBlock, draggingBlockIds, isSelecting, selectionStart, isPanning, panStart, zoom, viewOffset, organigram, visibleBlocks]) // dependencies need to be correct
 
   // We need a separate `useEffect` or Ref to handle the "Follow Mouse" for multi-drag efficiently 
   // because we can't easily capture "initial positions" in the effect dependency loop without resetting it.
@@ -451,7 +519,7 @@ function Canvas({
         }}
       >
         <Minimap
-          blocks={organigram.blocks}
+          blocks={visibleBlocks}
           viewOffset={viewOffset}
           zoom={zoom}
           viewportSize={viewportSize}
@@ -505,9 +573,9 @@ function Canvas({
 
           {/* Draw connection lines with nodes */}
           <svg className="connection-lines" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'visible' }}>
-            {connections.map((conn, idx) => {
-              const fromBlock = organigram.blocks.find(b => b.id === conn.from)
-              const toBlock = organigram.blocks.find(b => b.id === conn.to)
+            {visibleConnections.map((conn, idx) => {
+              const fromBlock = visibleBlocks.find(b => b.id === conn.from)
+              const toBlock = visibleBlocks.find(b => b.id === conn.to)
               if (fromBlock && toBlock) {
                 // Get actual block dimensions or defaults
                 const fromSize = blockSizes[fromBlock.id] || { width: 200, height: 100 }
@@ -519,7 +587,6 @@ function Canvas({
 
                 // Calculate center X for both blocks
                 const fromX = fromBlock.x + fromSize.width / 2
-                // const toX = toBlock.x + 200 / 2 // ToDo: fix toSize or generic width // Removed unused variable
 
                 // We need to fetch toSize properly
                 const toMeasure = blockSizes[toBlock.id] || { width: 200, height: 100 }
@@ -544,7 +611,7 @@ function Canvas({
             })}
           </svg>
 
-          {organigram.blocks.map(block => (
+          {visibleBlocks.map(block => (
             <Block
               key={block.id}
               block={block}
@@ -559,6 +626,7 @@ function Canvas({
               isConnecting={isDraggingConnection}
               onMouseDown={(e) => handleBlockDragStart(e, block.id)}
               onResize={handleBlockResize}
+              hasChildren={hasChildrenMap[block.id]}
             />
           ))}
         </div>

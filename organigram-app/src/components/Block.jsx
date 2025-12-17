@@ -2,7 +2,7 @@ import { useRef, useLayoutEffect } from 'react'
 import { DEFAULT_BLOCK } from '../utils/constants'
 import './Block.css'
 
-function Block({ block, onSelect, isSelected, onUpdate, onEdit, onAddChild, onNodeDragStart, onNodeDragEnd, isConnecting, onMouseDown, onResize, level = 0 }) {
+function Block({ block, onSelect, isSelected, onUpdate, onEdit, onAddChild, onNodeDragStart, onNodeDragEnd, isConnecting, onMouseDown, onResize, hasChildren, level = 0 }) {
   const blockRef = useRef(null)
 
   useLayoutEffect(() => {
@@ -12,6 +12,8 @@ function Block({ block, onSelect, isSelected, onUpdate, onEdit, onAddChild, onNo
     }
   }, [block.id, isSelected, block.name, block.title, block.groupName, block.comment, block.collapsed, onResize])
 
+  const children = block.children || []
+
   const handleClick = (e) => {
     if (e.target.closest('.block-quick-actions') || e.target.closest('.fold-button') || e.target.closest('.attach-button')) return
     onSelect(block.id)
@@ -19,7 +21,8 @@ function Block({ block, onSelect, isSelected, onUpdate, onEdit, onAddChild, onNo
   }
 
   const toggleCollapse = () => {
-    onUpdate({ ...block, collapsed: !block.collapsed })
+    console.log('Toggling collapse for block', block.id, 'current state:', block.collapsed)
+    onUpdate(block.id, { ...block, collapsed: !block.collapsed })
   }
 
   const handleNodeMouseDown = (e, position) => {
@@ -56,16 +59,16 @@ function Block({ block, onSelect, isSelected, onUpdate, onEdit, onAddChild, onNo
   }
 
   const updateChild = (childId, updatedChild) => {
-    onUpdate({
+    onUpdate(block.id, {
       ...block,
-      children: block.children.map(c => c.id === childId ? updatedChild : c)
+      children: children.map(c => c.id === childId ? updatedChild : c)
     })
   }
 
   const deleteChild = (childId) => {
-    onUpdate({
+    onUpdate(block.id, {
       ...block,
-      children: block.children.filter(c => c.id !== childId)
+      children: children.filter(c => c.id !== childId)
     })
   }
 
@@ -155,7 +158,20 @@ function Block({ block, onSelect, isSelected, onUpdate, onEdit, onAddChild, onNo
             >
               ⬆️
             </button>
-            {block.children.length > 0 && (
+            {children.length > 0 && (
+              <button
+                className="quick-action-btn"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleCollapse()
+                }}
+                title={block.collapsed ? 'Unfold' : 'Fold'}
+              >
+                {block.collapsed ? '▶️' : '▼'}
+              </button>
+            )}
+            {/* Show fold button if external hasChildren prop is true (flat mode) or fallback to internal children */}
+            {!children.length && hasChildren && (
               <button
                 className="quick-action-btn"
                 onClick={(e) => {
@@ -170,9 +186,9 @@ function Block({ block, onSelect, isSelected, onUpdate, onEdit, onAddChild, onNo
           </div>
         )}
 
-        {block.children.length > 0 && !block.collapsed && (
+        {children.length > 0 && !block.collapsed && (
           <div className="block-children">
-            {block.children.map(child => (
+            {children.map(child => (
               <Block
                 key={child.id}
                 block={child}
