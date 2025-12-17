@@ -1,24 +1,33 @@
 import jsyaml from 'js-yaml'
 
 export const Storage = {
-  save(key, data) {
+  async save(key, data) {
+    if (key !== 'organigrams') return // Only persist organigrams for now
     try {
-      localStorage.setItem(key, JSON.stringify(data))
+      await fetch('/api/organigrams', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
     } catch (e) {
       console.error('Storage error:', e)
     }
   },
-  
-  load(key) {
+
+  async load(key) {
+    if (key !== 'organigrams') return null
     try {
-      const data = localStorage.getItem(key)
-      return data ? JSON.parse(data) : null
+      const response = await fetch('/api/organigrams')
+      if (!response.ok) throw new Error('Network response was not ok')
+      return await response.json()
     } catch (e) {
       console.error('Storage error:', e)
       return null
     }
   },
-  
+
   exportToYAML(organigrams) {
     try {
       const yaml = jsyaml.dump({ organigrams })
@@ -34,7 +43,7 @@ export const Storage = {
       alert('Failed to export YAML')
     }
   },
-  
+
   importFromYAML(file, callback) {
     const reader = new FileReader()
     reader.onload = (e) => {

@@ -1,37 +1,33 @@
 import './Sidebar.css'
 
-function Sidebar({ 
-  organigrams, 
-  currentOrganigramId, 
-  onSelectOrganigram, 
+function Sidebar({
+  organigrams,
+  currentOrganigramId,
+  onSelectOrganigram,
   onDeleteOrganigram,
   onNewOrganigram,
   onExport,
-  onImport 
+  onExportPDF,
+  onImport
 }) {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
         <h1>📊 Organigrams</h1>
-        <button
-          className="btn btn-primary"
-          style={{ width: '100%' }}
-          onClick={onNewOrganigram}
-        >
+        <button className="btn btn-primary full-width" onClick={onNewOrganigram}>
           + New Organigram
         </button>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button className="btn btn-secondary" onClick={onExport} style={{ flex: 1 }}>
-            Export
+
+        <div className="sidebar-actions" style={{ marginTop: 'auto', paddingTop: '20px' }}>
+          <button className="btn btn-secondary full-width" onClick={onExport} style={{ marginBottom: '10px' }}>
+            Export JSON
           </button>
-          <label className="btn btn-secondary" style={{ flex: 1, textAlign: 'center', margin: 0 }}>
-            Import
-            <input
-              type="file"
-              accept=".yaml,.yml"
-              onChange={onImport}
-              style={{ display: 'none' }}
-            />
+          <button className="btn btn-secondary full-width" onClick={onExportPDF} style={{ marginBottom: '10px' }}>
+            Export PDF
+          </button>
+          <label className="btn btn-secondary full-width" style={{ cursor: 'pointer', textAlign: 'center' }}>
+            Import JSON
+            <input type="file" accept=".yaml,.json" onChange={onImport} style={{ display: 'none' }} />
           </label>
         </div>
       </div>

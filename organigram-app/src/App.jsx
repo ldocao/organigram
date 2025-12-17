@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar'
 import Canvas from './components/Canvas'
 import BlockEditor from './components/BlockEditor'
 import { Storage } from './utils/storage'
+import { exportToPDF } from './utils/pdfExporter'
 import { GRID_SIZE } from './utils/constants'
 
 function App() {
@@ -17,13 +18,14 @@ function App() {
   // Load from storage on mount
   // Load from storage on mount
   useEffect(() => {
-    const saved = Storage.load('organigrams')
-    if (saved && saved.length > 0) {
-      // Use setTimeout to avoid synchronous updates during render/mount phases
-      // or just ensure this only runs once. React 18 strict mode double-invokes.
-      setOrganigrams(saved)
-      setCurrentOrganigramId(saved[0].id)
+    const loadData = async () => {
+      const saved = await Storage.load('organigrams')
+      if (saved && saved.length > 0) {
+        setOrganigrams(saved)
+        setCurrentOrganigramId(saved[0].id)
+      }
     }
+    loadData()
   }, [])
 
   // Save to storage on change
@@ -221,7 +223,11 @@ function App() {
     }
   }
 
-
+  const handleExportPDF = () => {
+    if (currentOrganigram) {
+      exportToPDF(currentOrganigram)
+    }
+  }
 
   return (
     <div className="app-container">
@@ -232,6 +238,7 @@ function App() {
         onDeleteOrganigram={deleteOrganigram}
         onNewOrganigram={() => setShowNewOrganigramModal(true)}
         onExport={handleExport}
+        onExportPDF={handleExportPDF}
         onImport={handleImport}
       />
 
