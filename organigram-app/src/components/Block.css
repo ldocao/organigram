@@ -1,6 +1,6 @@
 .block {
   position: absolute;
-  min-width: 200px;
+  width: 200px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -8,6 +8,7 @@
   cursor: pointer;
   border: 2px solid #ddd;
   transition: box-shadow 0.2s;
+  box-sizing: border-box;
 }
 
 .block.dragging {
@@ -93,21 +94,25 @@
 
 .block-quick-actions {
   display: flex;
-  gap: 6px;
-  margin-top: 12px;
-  padding-top: 12px;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid #f0f0f0;
 }
 
 .quick-action-btn {
   flex: 1;
-  padding: 8px 12px;
+  padding: 6px 4px;
   border: none;
   background: #f0f0f0;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.2s;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .quick-action-btn:hover {
@@ -150,6 +155,8 @@
   letter-spacing: 0.5px;
   line-height: 1.2;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
   border-bottom: 2px solid #2196f3;
   padding-bottom: 6px;
   margin-bottom: 4px;
@@ -162,6 +169,8 @@
   color: #333;
   line-height: 1.3;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 /* Priority 3: Title - Third priority */
@@ -172,6 +181,8 @@
   font-style: italic;
   line-height: 1.3;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 /* Priority 4: Comments - Fourth priority */

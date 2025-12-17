@@ -253,9 +253,9 @@ function App() {
     })
 
     // Layout constants
-    const BLOCK_WIDTH = 200 // Approximate block width
+    const BLOCK_WIDTH = 200 // Fixed block width
     const MIN_HORIZONTAL_SPACING = 80 // Minimum space between blocks
-    const VERTICAL_SPACING = 200
+    const VERTICAL_SPACING = 250 // Vertical space between generations
     const START_X = 100
     const START_Y = 100
 
