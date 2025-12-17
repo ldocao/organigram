@@ -208,14 +208,156 @@ function App() {
   const resetLayout = () => {
     if (!currentOrganigram) return
 
+    const blocks = currentOrganigram.blocks
+    const connections = currentOrganigram.connections || []
+
+    // Step 1: Expand all collapsed blocks first
+    const expandedBlocks = blocks.map(block => ({
+      ...block,
+      collapsed: false
+    }))
+
+    // Build parent-child relationships
+    const childrenMap = new Map() // parentId -> [childIds]
+    const parentMap = new Map() // childId -> parentId
+
+    connections.forEach(conn => {
+      if (!childrenMap.has(conn.from)) {
+        childrenMap.set(conn.from, [])
+      }
+      childrenMap.get(conn.from).push(conn.to)
+      parentMap.set(conn.to, conn.from)
+    })
+
+    // Find root nodes (blocks with no parents)
+    const roots = expandedBlocks.filter(b => !parentMap.has(b.id))
+
+    // Calculate levels for each block
+    const levels = new Map() // blockId -> level
+    const calculateLevel = (blockId, level = 0) => {
+      levels.set(blockId, level)
+      const children = childrenMap.get(blockId) || []
+      children.forEach(childId => calculateLevel(childId, level + 1))
+    }
+
+    roots.forEach(root => calculateLevel(root.id))
+
+    // Group blocks by level
+    const blocksByLevel = new Map()
+    expandedBlocks.forEach(block => {
+      const level = levels.get(block.id) || 0
+      if (!blocksByLevel.has(level)) {
+        blocksByLevel.set(level, [])
+      }
+      blocksByLevel.get(level).push(block)
+    })
+
+    // Layout constants
+    const BLOCK_WIDTH = 200 // Approximate block width
+    const MIN_HORIZONTAL_SPACING = 80 // Minimum space between blocks
+    const VERTICAL_SPACING = 200
+    const START_X = 100
+    const START_Y = 100
+
+    // Two-pass layout algorithm:
+    // Pass 1: Calculate subtree widths bottom-up
+    // Pass 2: Position blocks top-down, centering children under parents
+
+    const newPositions = new Map()
+    const subtreeWidths = new Map() // blockId -> total width needed for this subtree
+
+    // Pass 1: Calculate subtree width for each block (bottom-up)
+    const calculateSubtreeWidth = (blockId) => {
+      if (subtreeWidths.has(blockId)) {
+        return subtreeWidths.get(blockId)
+      }
+
+      const children = childrenMap.get(blockId) || []
+      
+      if (children.length === 0) {
+        // Leaf node: just the block width
+        subtreeWidths.set(blockId, BLOCK_WIDTH)
+        return BLOCK_WIDTH
+      }
+
+      // Calculate total width needed for all children
+      let totalChildrenWidth = 0
+      children.forEach((childId, index) => {
+        const childWidth = calculateSubtreeWidth(childId)
+        totalChildrenWidth += childWidth
+        if (index < children.length - 1) {
+          totalChildrenWidth += MIN_HORIZONTAL_SPACING
+        }
+      })
+
+      // The subtree width is the maximum of:
+      // - The block's own width
+      // - The total width needed for all children
+      const subtreeWidth = Math.max(BLOCK_WIDTH, totalChildrenWidth)
+      subtreeWidths.set(blockId, subtreeWidth)
+      return subtreeWidth
+    }
+
+    // Calculate widths for all blocks starting from roots
+    roots.forEach(root => calculateSubtreeWidth(root.id))
+
+    // Pass 2: Position blocks top-down
+    const positionSubtree = (blockId, centerX, level) => {
+      // Position the current block centered at centerX
+      const blockX = centerX - BLOCK_WIDTH / 2
+      const blockY = START_Y + level * VERTICAL_SPACING
+      
+      newPositions.set(blockId, { x: blockX, y: blockY })
+
+      // Position children symmetrically under this block
+      const children = childrenMap.get(blockId) || []
+      if (children.length > 0) {
+        // Calculate total width needed for children
+        let totalChildrenWidth = 0
+        children.forEach((childId, index) => {
+          totalChildrenWidth += subtreeWidths.get(childId) || BLOCK_WIDTH
+          if (index < children.length - 1) {
+            totalChildrenWidth += MIN_HORIZONTAL_SPACING
+          }
+        })
+
+        // Start position for first child (left-aligned under parent's subtree)
+        let childX = centerX - totalChildrenWidth / 2
+
+        // Position each child
+        children.forEach((childId) => {
+          const childSubtreeWidth = subtreeWidths.get(childId) || BLOCK_WIDTH
+          const childCenterX = childX + childSubtreeWidth / 2
+          
+          positionSubtree(childId, childCenterX, level + 1)
+          
+          childX += childSubtreeWidth + MIN_HORIZONTAL_SPACING
+        })
+      }
+    }
+
+    // Position each root tree
+    let currentX = START_X
+    roots.forEach((root, index) => {
+      const rootWidth = subtreeWidths.get(root.id) || BLOCK_WIDTH
+      const rootCenterX = currentX + rootWidth / 2
+      
+      positionSubtree(root.id, rootCenterX, 0)
+      
+      // Move to next root position
+      currentX += rootWidth + MIN_HORIZONTAL_SPACING * 3 // Extra spacing between separate trees
+    })
+
+    // Apply new positions and expanded state
     setOrganigrams(organigrams.map(o =>
       o.id === currentOrganigramId
         ? {
           ...o,
           blocks: o.blocks.map(block => ({
             ...block,
-            x: Math.round(block.x / GRID_SIZE) * GRID_SIZE,
-            y: Math.round(block.y / GRID_SIZE) * GRID_SIZE
+            collapsed: false, // Expand all blocks
+            x: newPositions.get(block.id)?.x || block.x,
+            y: newPositions.get(block.id)?.y || block.y
           }))
         }
         : o
